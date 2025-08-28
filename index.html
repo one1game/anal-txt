@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Анализатор кода с подсветкой</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <style>
+        .code-container {
+            margin: 20px 0;
+        }
+        .file-title {
+            background: #0366d6;
+            color: white;
+            padding: 10px;
+            border-radius: 5px 5px 0 0;
+        }
+        pre {
+            margin: 0;
+            padding: 15px;
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+        }
+    </style>
+</head>
+<body>
+    <h1>Анализатор исходного кода</h1>
+    
+    <input type="file" id="fileInput" multiple accept=".html,.css,.js,.java,.py,.php,.xml,.json">
+    <button onclick="processFiles()">Анализировать файлы</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function processFiles() {
+            const files = document.getElementById('fileInput').files;
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            
+            if (files.length === 0) {
+                results.innerHTML = '<p>Пожалуйста, выберите файлы</p>';
+                return;
+            }
+            
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    displayFileContent(file, e.target.result);
+                };
+                
+                reader.readAsText(file);
+            });
+        }
+        
+        function displayFileContent(file, content) {
+            const results = document.getElementById('results');
+            const container = document.createElement('div');
+            container.className = 'code-container';
+            
+            const extension = file.name.split('.').pop().toLowerCase();
+            const language = getLanguage(extension);
+            
+            container.innerHTML = `
+                <div class="file-title">
+                    📄 ${file.name} (${getFileSize(file.size)})
+                </div>
+                <pre><code class="language-${language}">${escapeHtml(content)}</code></pre>
+            `;
+            
+            results.appendChild(container);
+            hljs.highlightElement(container.querySelector('code'));
+        }
+        
+        function getLanguage(extension) {
+            const languages = {
+                'js': 'javascript',
+                'html': 'html',
+                'css': 'css',
+                'java': 'java',
+                'py': 'python',
+                'php': 'php',
+                'xml': 'xml',
+                'json': 'json'
+            };
+            return languages[extension] || 'plaintext';
+        }
+        
+        function getFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+        
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
